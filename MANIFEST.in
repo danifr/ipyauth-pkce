@@ -1,5 +1,8 @@
 
 # js
+recursive-include ipyauth/nbextension *.*
+recursive-include ipyauth/labextension *.*
+recursive-include ipyauth/js *.js
 recursive-include ipyauth/ipyauth_widget/static *.*
 
 # subfolders

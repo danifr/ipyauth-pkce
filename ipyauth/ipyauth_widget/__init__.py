@@ -20,3 +20,11 @@ def _jupyter_nbextension_paths():
         # path in the `nbextension/` namespace
         'require': 'ipyauth/extension'
     }]
+
+
+def _jupyter_labextension_paths():
+    return [{
+        'name': 'ipyauth.ipyauth_widget',
+        'src': 'labextension',
+        'dest': '@jupyterlab-widgets/ipyauth'
+    }]

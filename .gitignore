@@ -11,6 +11,8 @@ dist/*
 *.egg-info/
 
 **/node_modules/
+ipyauth/nbextension/
+ipyauth/labextension/
 **/dist/
 **/build/
 **/static/

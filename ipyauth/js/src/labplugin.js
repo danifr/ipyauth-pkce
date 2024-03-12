@@ -12,7 +12,7 @@ const activate = (app, widgets) => {
 
     widgets.registerWidget({
         name: 'ipyauth',
-        version,
+        version: version,
         exports: myWidget,
     });
 };
