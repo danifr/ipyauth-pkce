@@ -111,7 +111,7 @@ class ParamsKeycloak(HasTraits):
     def build_authorize_endpoint(self):
         """
         """
-        return self.base_url+'/auth/realms/'+self.realm+'/protocol/openid-connect/auth'
+        return self.base_url+'/realms/'+self.realm+'/protocol/openid-connect/auth'
 
     def build_data(self):
         """

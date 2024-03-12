@@ -4,7 +4,7 @@ import util from './widget_util';
 
 const keycloak = {
     name: 'keycloak',
-    authorize_endpoint: 'http://keycloak.example.com:8080/auth/realms/demo/protocol/openid-connect/auth',
+    authorize_endpoint: 'http://keycloak.example.com:8080/realms/demo/protocol/openid-connect/auth',
     url_params: {
         response_type: '',
         redirect_uri: 'my-redirect-uri',
