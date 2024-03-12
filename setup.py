@@ -5,12 +5,12 @@
 # cf. https://packaging.python.org/tutorials/distributing-packages/
 
 # commands:
+# pip install build
 # one liner
 # python setup.py sdist upload -r pypi
 # 2 steps
-# python setup.py sdist bdist_wheel
+# python -m build
 # twine upload dist/*
-
 
 from setuptools import setup, find_packages
 from distutils.util import convert_path
