@@ -19,11 +19,11 @@ __name__ = 'ipyauth'
 name_url = __name__.replace('_', '-')
 
 
-version_info = (0, 2, 6, 'eucm', 1)
+version_info = (0, 2, 7)
 __version__ = _get_version(version_info)
 
 # must be MANUALLY synced wih js.package.json.version
-version_js_info = (0, 2, 6, 'eucm', 1)
+version_js_info = (0, 2, 7)
 __version_js__ = _get_version(version_js_info)
 
 
@@ -46,6 +46,7 @@ __keywords__ = ['ipywidget',
                 'Auth0',
                 'Google',
                 'SG Connect',
+                'Keycloak',
                 ]
 __license__ = 'MIT'
 __classifiers__ = ['Development Status :: 4 - Beta',
