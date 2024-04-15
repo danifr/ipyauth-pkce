@@ -26,5 +26,5 @@ def _jupyter_labextension_paths():
     return [{
         'name': 'ipyauth.ipyauth_widget',
         'src': 'labextension',
-        'dest': '@jupyterlab-widgets/ipyauth'
+        'dest': 'ipyauth-widget'
     }]

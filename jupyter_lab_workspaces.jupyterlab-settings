@@ -1,0 +1,7 @@
+{
+  "workspaces": {
+    "C:\\GitHub\\ipyauth": {
+      "ipyauth/ipyauth_widget": true
+    }
+  }
+}

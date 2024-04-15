@@ -57,7 +57,7 @@ __classifiers__ = ['Development Status :: 4 - Beta',
 __include_package_data__ = True
 __package_data__ = {}
 __data_files__ = [
-    ('share/jupyter/nbextensions/ipyauth', [
+    ('share/jupyter/labextensions/ipyauth', [
         'ipyauth/ipyauth_widget/static/extension.js',
         'ipyauth/ipyauth_widget/static/index.js',
         'ipyauth/ipyauth_widget/static/index.js.map',
