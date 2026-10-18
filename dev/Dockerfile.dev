@@ -1,0 +1,53 @@
+# Dev image for the fast inner loop.
+#
+# Unlike Dockerfile.test (which installs a built wheel), this image installs
+# the package *editable* and symlinks the labextension into the Jupyter share
+# dir. Combined with bind-mounting the source at runtime (see run-dev.sh), a
+# code change no longer requires rebuilding the wheel or the image:
+#
+#   - Python changes  -> live (editable install), just restart the container
+#   - JS changes      -> rebuild the bundle on the host (fast), reload browser
+#
+# Build this image once; then iterate with dev/run-dev.sh (build context is the
+# repo root).
+FROM quay.io/jupyter/minimal-notebook:x86_64-python-3.12.11
+
+USER root
+
+# Copy only dependency-affecting metadata first so the pip layer caches well.
+# The actual source is bind-mounted at runtime, so editable install just needs
+# the project to resolve and register entry points / the server extension.
+COPY pyproject.toml README.md /opt/ipyauth-src/
+COPY ipyauth_pkce /opt/ipyauth-src/ipyauth_pkce
+
+# Editable install for live Python edits. The labextension is a prebuilt
+# (federated) extension: at wheel-install time hatch's shared-data maps
+# ipyauth_pkce/labextension -> share/jupyter/labextensions/ipyauth-pkce.
+# An editable install does NOT place shared-data, so we replicate that mapping
+# with a symlink to the bind-mounted bundle, which run-dev.sh builds on the host.
+# Likewise symlink the server-extension enable config. No Node.js in the image,
+# so the JS build hook is skipped here (SKIP_JUPYTER_BUILDER).
+#
+# NOTE: we `rm -rf` the labextensions target first. The editable install (and
+# jupyter's data-file discovery) can create a *real* directory there populated
+# with a snapshot of the labextension at build time. If that real directory is
+# left in place, `ln -sfn` does NOT replace it (it would create the link inside
+# it), so the container would serve a STALE, image-baked bundle and ignore the
+# bind-mounted host build — meaning JS changes never reach the browser.
+# The source is copied without .git, so give hatch-vcs an explicit version.
+RUN SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0+dev SKIP_JUPYTER_BUILDER=1 pip install --no-cache-dir -e /opt/ipyauth-src && \
+    rm -rf /opt/conda/share/jupyter/labextensions/ipyauth-pkce && \
+    ln -sfn /opt/ipyauth-src/ipyauth_pkce/labextension \
+        /opt/conda/share/jupyter/labextensions/ipyauth-pkce && \
+    ln -sf /opt/ipyauth-src/ipyauth_pkce/ipyauth_callback/ipyauth-pkce.json \
+        /opt/conda/etc/jupyter/jupyter_server_config.d/ipyauth-pkce.json && \
+    test -L /opt/conda/share/jupyter/labextensions/ipyauth-pkce && \
+    chown -R ${NB_UID}:${NB_GID} /opt/ipyauth-src
+
+COPY notebooks/*.ipynb /home/jovyan/
+RUN chown -R ${NB_UID}:${NB_GID} /home/jovyan/*.ipynb
+
+USER ${NB_UID}
+WORKDIR /home/jovyan
+
+ENV IPYAUTH_TOKEN_ENDPOINT=""

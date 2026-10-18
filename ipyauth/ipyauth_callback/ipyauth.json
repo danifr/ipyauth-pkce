@@ -1,7 +1,0 @@
-{
-    "ServerApp": {
-      "nbserver_extensions": {
-        "ipyauth.ipyauth_callback.server_extension": true
-      }
-    }
-  }

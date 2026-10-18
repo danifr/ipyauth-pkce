@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+ipyauth_pkce/js/dist/
+ipyauth_pkce/labextension/
+dist/
+build/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.pytest_cache/
+.hypothesis/
+
+# Virtual environments
+.venv*/
+
+# Environment / secrets
+.env
+*.env.local
+*.env
+
+# IDE / tools
+.kiro/
+
+# Local scratch notebooks
+notebooks/test-*.ipynb

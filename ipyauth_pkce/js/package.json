@@ -1,0 +1,69 @@
+{
+    "name": "ipyauth-pkce",
+    "version": "1.0.0",
+    "description": "Jupyter widget for OAuth2 authentication with PKCE",
+    "author": "danifr",
+    "license": "MIT",
+    "main": "src/labplugin.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/danifr/ipyauth-pkce.git"
+    },
+    "keywords": [
+        "jupyter",
+        "widgets",
+        "ipython",
+        "ipywidgets",
+        "oauth2",
+        "pkce",
+        "Auth0",
+        "Google",
+        "Keycloak"
+    ],
+    "files": [
+        "src/**/*.js"
+    ],
+    "jupyterlab": {
+        "extension": "src/labplugin",
+        "outputDir": "../labextension",
+        "sharedPackages": {
+            "@jupyter-widgets/base": {
+                "bundled": false,
+                "singleton": true
+            }
+        }
+    },
+    "jest": {
+        "testEnvironment": "jsdom",
+        "setupFilesAfterEnv": [
+            "./src/test-setup/setup-crypto.js"
+        ]
+    },
+    "scripts": {
+        "clean": "rm -rf ../labextension/static/",
+        "cleanall": "npm run clean && rm -rf node_modules/",
+        "test": "jest --no-cache",
+        "lint": "eslint '**/*.js' --quiet",
+        "format": "prettier --write '**/*.js'",
+        "build": "npm run build:labextension",
+        "build:labextension": "jupyter-builder build .",
+        "build:labextension:dev": "jupyter-builder build --development True ."
+    },
+    "devDependencies": {
+        "@babel/core": "^7.24.0",
+        "@babel/preset-env": "^7.29.2",
+        "@jupyterlab/builder": "^4.1.4",
+        "babel-jest": "^30.3.0",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.1.3",
+        "fast-check": "^4.6.0",
+        "jest": "^30.3.0",
+        "jest-environment-jsdom": "^30.3.0",
+        "prettier": "^3.2.5"
+    },
+    "dependencies": {
+        "@jupyter-widgets/base": "^6.0.7",
+        "@jupyter-widgets/controls": "^5.0.8"
+    }
+}

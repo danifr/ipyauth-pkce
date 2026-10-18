@@ -1,0 +1,36 @@
+name: Test
+on:
+  push:
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # tags, for the version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ipyauth_pkce/js/package-lock.json
+      - run: npm ci
+        working-directory: ipyauth_pkce/js
+      - run: npm run lint
+        working-directory: ipyauth_pkce/js
+      - run: npm test
+        working-directory: ipyauth_pkce/js
+      # The editable install also builds the JupyterLab extension (build hook).
+      - run: pip install -e . pytest "jupyterlab>=4,<5"
+      - run: pytest -q
+      - name: Wheel and sdist build
+        run: pip install build && python -m build

@@ -1,0 +1,23 @@
+# Installs the built wheel, like an end user would. Run via dev/run-test.sh
+# (build context is the repo root).
+FROM quay.io/jupyter/minimal-notebook:x86_64-python-3.12.11
+
+USER root
+
+# Install from the pre-built wheel (faster, no build deps needed)
+COPY dist/ipyauth_pkce-*.whl /tmp/
+RUN pip install /tmp/ipyauth_pkce-*.whl && \
+    rm -f /tmp/ipyauth_pkce-*.whl
+
+# Copy notebooks
+COPY notebooks/*.ipynb /home/jovyan/
+RUN chown -R ${NB_UID}:${NB_GID} /home/jovyan/*.ipynb
+
+USER ${NB_UID}
+WORKDIR /home/jovyan
+
+# Token endpoint for the server-side PKCE exchange (non-Google providers).
+# Empty by default so no deployment URL is baked into the image. Set it at
+# runtime, e.g.  podman run -e IPYAUTH_TOKEN_ENDPOINT="https://.../token" ...
+# See README "Token endpoint configuration".
+ENV IPYAUTH_TOKEN_ENDPOINT=""

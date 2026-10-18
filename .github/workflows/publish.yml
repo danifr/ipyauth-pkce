@@ -1,0 +1,30 @@
+name: Publish to PyPI
+# Publishing a GitHub release (tag vX.Y.Z) builds and uploads version X.Y.Z.
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # tags, for the version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4  # the build compiles the JupyterLab extension
+        with:
+          node-version: '20'
+      - run: pip install hatch
+      - run: hatch build
+      - uses: pypa/gh-action-pypi-publish@v1

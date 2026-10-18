@@ -1,3 +1,102 @@
 [build-system]
-requires = ["jupyter_packaging", "jupyterlab", "setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+# setuptools-scm is pinned because hatch-vcs 0.5.0 (unmaintained since 2025-05)
+# uses an argument that setuptools-scm 10 deprecated.
+requires = [
+    "hatchling",
+    "hatch-vcs==0.5.0",
+    "setuptools-scm==10.3.4",
+    # Build the JupyterLab extension (ipyauth_pkce/js) as part of the wheel/sdist.
+    "hatch-jupyter-builder==0.10.0",
+    "jupyter-builder==1.2.3",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "ipyauth-pkce"
+dynamic = ["version"]
+description = "Jupyter widget for OAuth2 authentication with PKCE — sign in from a notebook cell and use the token in Python"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+authors = [
+    { name = "danifr" },
+]
+keywords = [
+    "ipywidget",
+    "javascript",
+    "OAuth2",
+    "PKCE",
+    "Auth0",
+    "Google",
+    "Keycloak",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "python-dotenv>=1.0",
+    "ipywidgets>=8.0,<9",
+    "jupyter_server>=2.13.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/danifr/ipyauth-pkce"
+Repository = "https://github.com/danifr/ipyauth-pkce"
+
+# The package version comes from the git tag (vX.Y.Z) of the GitHub release.
+[tool.hatch.version]
+source = "vcs"
+# Only release tags count (ignores the inherited upstream tags such as 0.2.6).
+tag-pattern = '^v(?P<version>\d+\.\d+\.\d+)$'
+raw-options = { git_describe_command = "git describe --dirty --tags --long --match 'v[0-9]*'" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["ipyauth_pkce"]
+# JS sources/tests/tooling are build inputs only; the built labextension and
+# server config are installed via shared-data below.
+exclude = [
+    "ipyauth_pkce/js",
+    "ipyauth_pkce/labextension",
+    "ipyauth_pkce/ipyauth_callback/ipyauth-pkce.json",
+]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"ipyauth_pkce/labextension" = "share/jupyter/labextensions/ipyauth-pkce"
+"install.json" = "share/jupyter/labextensions/ipyauth-pkce/install.json"
+"ipyauth_pkce/ipyauth_callback/ipyauth-pkce.json" = "etc/jupyter/jupyter_server_config.d/ipyauth-pkce.json"
+
+# Builds ipyauth_pkce/labextension from ipyauth_pkce/js (needs Node.js) before
+# packaging. An existing bundle is reused, so a wheel can be built from the sdist
+# (which ships the bundle) without Node.js; delete the bundle or run
+# `npm run build` to pick up JS changes in a local build. CI starts clean.
+[tool.hatch.build.hooks.jupyter-builder]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "ipyauth_pkce/labextension/package.json",
+    "ipyauth_pkce/labextension/static/style.js",
+]
+skip-if-exists = ["ipyauth_pkce/labextension/static/style.js"]
+# An editable install without Node.js (e.g. dev/Dockerfile.dev) only warns.
+optional-editable-build = true
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+path = "ipyauth_pkce/js"
+npm = "npm"
+build_cmd = "build"
+source_dir = "ipyauth_pkce/js/src"
+build_dir = "ipyauth_pkce/labextension"
+
+[tool.hatch.build.targets.sdist]
+# The built bundle is gitignored; ship it anyway.
+artifacts = ["ipyauth_pkce/labextension"]
+include = [
+    "ipyauth_pkce/",
+    "LICENSE",
+    "README.md",
+    "install.json",
+    "pyproject.toml",
+]

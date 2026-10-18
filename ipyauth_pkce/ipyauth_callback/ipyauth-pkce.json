@@ -1,0 +1,7 @@
+{
+    "ServerApp": {
+      "jpserver_extensions": {
+        "ipyauth_pkce.ipyauth_callback.server_extension": true
+      }
+    }
+  }

@@ -1,0 +1,36 @@
+{
+    "extends": ["eslint:recommended", "prettier"],
+    "plugins": ["prettier"],
+    "rules": {
+        "prettier/prettier": ["error"],
+        "no-console": "off",
+        "func-names": "off",
+        "no-undef": "off",
+        "camelcase": "off",
+        "prefer-destructuring": [
+            "error",
+            {
+                "object": true,
+                "array": false
+            }
+        ],
+        "no-underscore-dangle": [
+            2,
+            {
+                "allow": ["__super__"]
+            }
+        ],
+        "no-param-reassign": "off",
+        "no-use-before-define": "off",
+        "prefer-rest-params": "off"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+    },
+    "env": {
+        "es6": true,
+        "browser": true,
+        "node": true
+    }
+}
