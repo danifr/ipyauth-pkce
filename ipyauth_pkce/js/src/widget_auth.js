@@ -261,11 +261,45 @@ function getXsrfToken() {
 }
 
 /**
- * Get the Jupyter base URL from the page's <body data-base-url="..."> attribute.
+ * Get the Jupyter base URL (including any per-user service prefix such as
+ * "/user/<name>/<server>/").
+ *
+ * In JupyterLab, especially behind JupyterHub, the authoritative base URL is
+ * published in the "#jupyter-config-data" JSON script tag as "baseUrl". The
+ * classic-notebook "<body data-base-url>" attribute is NOT reliable in a
+ * JupyterLab federated extension and can resolve to "/", which would send the
+ * token-exchange POST to the host root (bypassing the single-user server and
+ * getting a 403 from the hub). We therefore prefer the config data, then fall
+ * back to the body attribute, then to deriving the prefix from the current URL.
  */
 function getBaseUrl() {
+    // 1. JupyterLab/JupyterHub page config (most authoritative).
+    try {
+        const el = document.getElementById('jupyter-config-data');
+        if (el && el.textContent) {
+            const cfg = JSON.parse(el.textContent);
+            if (cfg && typeof cfg.baseUrl === 'string' && cfg.baseUrl) {
+                return cfg.baseUrl;
+            }
+        }
+    } catch (e) {
+        // Ignore malformed config and fall through to other strategies.
+    }
+
+    // 2. Classic notebook body attribute.
     const body = document.querySelector('body');
-    return (body && body.getAttribute('data-base-url')) || '/';
+    const attr = body && body.getAttribute('data-base-url');
+    if (attr) {
+        return attr;
+    }
+
+    // 3. Derive a "/user/<name>/<server>/" prefix from the current path, if present.
+    const match = window.location.pathname.match(/^(\/user\/[^/]+\/[^/]+\/)/);
+    if (match) {
+        return match[1];
+    }
+
+    return '/';
 }
 
 /**
@@ -623,4 +657,4 @@ export default {
     isLogged,
 };
 
-export { buildReadMessage, startCountdown };
+export { buildReadMessage, startCountdown, getBaseUrl };
