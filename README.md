@@ -156,7 +156,7 @@ operator in the Jupyter server environment.
 
 ## Development
 
-Requires Node.js (20+) in addition to Python. The JupyterLab extension in
+Requires Node.js (24 or newer) in addition to Python. The JupyterLab extension in
 `ipyauth_pkce/labextension/` is a build output and is not committed: it is built
 from `ipyauth_pkce/js` whenever the package is built or installed from source.
 

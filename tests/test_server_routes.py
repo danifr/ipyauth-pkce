@@ -83,8 +83,14 @@ def server(tmp_path_factory, idp):
         proc.kill()
         pytest.fail('jupyter server did not start')
     yield base
+    # Jupyter Server does not always exit on a single SIGTERM, so escalate to
+    # SIGKILL if it hasn't shut down promptly to avoid a flaky teardown error.
     proc.terminate()
-    proc.wait(timeout=10)
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=10)
 
 
 def _get(url):
