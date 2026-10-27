@@ -6,7 +6,7 @@ After signing in, the access token is available in the Python kernel for making 
 
 ## Demo
 
-![demo](https://raw.githubusercontent.com/danifr/ipyauth-pkce/main/assets/screen_recording.gif)
+![demo](assets/screen_recording.gif)
 
 ## Supported Providers
 
