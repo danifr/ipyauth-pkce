@@ -7,6 +7,22 @@ from ._config import DIC_LOGO
 from ._params_base import ParamsBase
 
 
+def _detect_image_format(data):
+    """Best-effort image format detection from magic bytes, defaulting to png."""
+    if data[:8] == b'\x89PNG\r\n\x1a\n':
+        return 'png'
+    if data[:3] == b'\xff\xd8\xff':
+        return 'jpg'
+    if data[:6] in (b'GIF87a', b'GIF89a'):
+        return 'gif'
+    if data[:4] == b'RIFF' and data[8:12] == b'WEBP':
+        return 'webp'
+    head = data[:256].lstrip()
+    if head[:5] == b'<?xml' or head[:4] == b'<svg':
+        return 'svg+xml'
+    return 'png'
+
+
 # Version of the JavaScript widget module (ipyauth_pkce/js/package.json), not of
 # the Python package. Bump both together only when the model/view contract changes.
 _FRONTEND_VERSION = '1.0.0'
@@ -37,8 +53,15 @@ class Auth(wg.VBox):
     _incr_signout = Int(0).tag(sync=True)
 
     def __init__(self,
-                 params=None):
+                 params=None,
+                 logo=None):
         """
+        params : ParamsAuth0 | ParamsGoogle | ParamsKeycloak
+            Provider configuration.
+        logo : str | os.PathLike | bytes, optional
+            Override the provider logo shown in the widget. Pass a path to an
+            image file (PNG, JPEG, GIF, WebP or SVG) or the raw image bytes.
+            When omitted, the built-in logo for the provider is used.
         """
         if not isinstance(params, ParamsBase):
             raise TypeError('params must be a ParamsAuth0, ParamsGoogle or ParamsKeycloak object')
@@ -46,7 +69,7 @@ class Auth(wg.VBox):
         self.params = params.data
         self.name = self.params['name']
 
-        wg_logo = self.build_widget_logo()
+        wg_logo = self.build_widget_logo(logo)
         wg_button_main = self.build_widget_button_main()
         wg_logged_as = self.build_widget_logged_as()
         wg_time_to_exp = self.build_widget_time_to_exp()
@@ -63,16 +86,22 @@ class Auth(wg.VBox):
 
         super().__init__([b1])
 
-    def build_widget_logo(self):
+    def build_widget_logo(self, logo=None):
+        """Build the logo image widget.
+
+        ``logo`` may be raw image bytes, or a path to an image file. When not
+        provided, the built-in logo for the provider is loaded.
         """
-        """
-        path_img = DIC_LOGO[self.name]
-        with open(path_img, 'rb') as f:
-            image = f.read()
+        if isinstance(logo, (bytes, bytearray)):
+            image = bytes(logo)
+        else:
+            path_img = logo if logo is not None else DIC_LOGO[self.name]
+            with open(path_img, 'rb') as f:
+                image = f.read()
 
         widget = wg.Image(
             value=image,
-            format='png',
+            format=_detect_image_format(image),
             layout=wg.Layout(
                 max_height='26px',
                 margin='3px',

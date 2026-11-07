@@ -44,6 +44,37 @@ def test_auth_widget_builds_for_each_provider(provider):
     assert bytes(logo.value).startswith(b'\x89PNG')
 
 
+def _logo_widget(auth):
+    return next(
+        w for w in _descendants(auth) if w.__class__.__name__ == 'Image'
+    )
+
+
+def test_logo_override_from_bytes():
+    custom = b'\x89PNG\r\n\x1a\ncompany-logo'
+    auth = Auth(params=PARAMS['keycloak'](), logo=custom)
+    logo = _logo_widget(auth)
+    assert bytes(logo.value) == custom
+    assert logo.format == 'png'
+
+
+def test_logo_override_from_path(tmp_path):
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg"></svg>'
+    path = tmp_path / 'company.svg'
+    path.write_bytes(svg)
+    auth = Auth(params=PARAMS['keycloak'](), logo=str(path))
+    logo = _logo_widget(auth)
+    assert bytes(logo.value) == svg
+    assert logo.format == 'svg+xml'
+
+
+def test_logo_defaults_to_provider_logo():
+    auth = Auth(params=PARAMS['keycloak']())
+    logo = _logo_widget(auth)
+    assert bytes(logo.value).startswith(b'\x89PNG')
+    assert logo.format == 'png'
+
+
 @pytest.mark.parametrize('bad', [None, {}, {'name': 'google', 'url_params': {}}, object()])
 def test_auth_rejects_non_params_objects(bad):
     with pytest.raises(TypeError):
