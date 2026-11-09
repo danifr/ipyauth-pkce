@@ -106,5 +106,5 @@ def test_synced_traits():
     synced = set(Auth.class_trait_names(sync=True))
     assert {
         'name', 'params', 'access_token', 'scope', 'logged_as',
-        'time_to_exp', 'expires_at', '_incr_signout',
+        'time_to_exp', 'expires_at', 'auth_error', '_incr_signout',
     } <= synced
