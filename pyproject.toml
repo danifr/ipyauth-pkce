@@ -51,8 +51,11 @@ Repository = "https://github.com/danifr/ipyauth-pkce"
 [tool.hatch.version]
 source = "vcs"
 # Only release tags count (ignores the inherited upstream tags such as 0.2.6).
+# No --dirty/--long: the build hook regenerates the labextension, which can
+# dirty the tree, and either flag would append a PEP 440 local segment
+# (e.g. 1.2.1.dev0+g<hash>.d<date>) that PyPI rejects.
 tag-pattern = '^v(?P<version>\d+\.\d+\.\d+)$'
-raw-options = { git_describe_command = "git describe --dirty --tags --long --match 'v[0-9]*'" }
+raw-options = { git_describe_command = "git describe --tags --match 'v[0-9]*'" }
 
 [tool.hatch.build.targets.wheel]
 packages = ["ipyauth_pkce"]
