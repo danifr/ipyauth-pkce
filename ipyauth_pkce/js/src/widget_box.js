@@ -91,11 +91,9 @@ class AuthView extends widgets.VBoxView {
                 }
 
                 const btn_main_clicked = function () {
-                    if (auth.isLogged(that)) {
-                        auth.clear(that);
-                    } else {
-                        auth.login(that);
-                    }
+                    // Clicking always starts a fresh login; when already signed
+                    // in this acts as "Refresh" (new token, new expiry).
+                    auth.login(that);
                 };
                 resolved.btn_main.el.addEventListener('click', btn_main_clicked);
 
