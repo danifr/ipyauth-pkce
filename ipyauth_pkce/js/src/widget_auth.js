@@ -114,6 +114,21 @@ const clearError = (that) => {
 };
 
 /**
+ * Publish a terminal auth outcome to the Python side via the synced
+ * `auth_error` trait ('cancelled' | 'error'), so a blocking caller can stop
+ * waiting without hanging until a timeout. Reset to '' at the start of a new
+ * attempt. Lives on the top-level widget model (not the error field), so it
+ * works even when no error field is wired.
+ */
+const setAuthError = (that, category) => {
+    if (!that || !that.model || typeof that.model.set !== 'function') {
+        return;
+    }
+    that.model.set({ auth_error: category });
+    that.model.save_changes();
+};
+
+/**
  * Set a widget field's CSS display via its ipywidgets layout model when
  * available, falling back to the DOM element's inline style.
  */
@@ -170,6 +185,7 @@ async function startAuthFlow(that, isUserInitiated = true) {
     cleanupAuthFlow();
     // A new attempt starts clean: drop any error shown from a previous flow.
     clearError(that);
+    setAuthError(that, '');
 
     // init
     const paramsModel = that.model.get('params');
@@ -205,6 +221,7 @@ async function startAuthFlow(that, isUserInitiated = true) {
         // popup is the normal, expected outcome and must not show an error.
         if (isUserInitiated) {
             showError(that, 'Popup blocked. Please allow popups for this site and try again.');
+            setAuthError(that, 'error');
         }
         // Signal to callers (e.g. the auto-login attempt on render) that the
         // popup did not open so they can fall back to the manual button.
@@ -246,6 +263,7 @@ async function startAuthFlow(that, isUserInitiated = true) {
         ipyauthStatus.popupWindowRef = null;
         console.error('ipyauth: Failed to start authentication flow', err);
         showError(that, 'Could not start sign-in. Please try again.');
+        setAuthError(that, 'error');
         return false;
     }
 
@@ -427,6 +445,7 @@ const buildReadMessage = (that, codeVerifier) => {
             ipyauthStatus.popupWindowRef = null;
             console.warn('ipyauth: Authentication popup was closed before completing sign-in');
             showError(that, 'Sign-in was cancelled (popup closed).');
+            setAuthError(that, 'cancelled');
         }, POPUP_CLOSE_POLL_INTERVAL_MS);
     };
 
@@ -462,6 +481,7 @@ const buildReadMessage = (that, codeVerifier) => {
                     } else {
                         console.error('ipyauth Error: Token validation failed');
                         showError(that, 'Sign-in failed: token validation error.');
+                        setAuthError(that, 'error');
                     }
                 })
                 .catch((err) => {
@@ -477,12 +497,14 @@ const buildReadMessage = (that, codeVerifier) => {
                             ? 'Sign-in is not configured on the server (token endpoint missing). Contact the server administrator.'
                             : 'Sign-in failed: could not exchange the authorization code.';
                     showError(that, msg);
+                    setAuthError(that, 'error');
                 });
         }
 
         if (data.statusAuth === 'error') {
             console.error('ipyauth Error: Authentication failed');
             showError(that, 'Sign-in failed. Please try again.');
+            setAuthError(that, 'error');
         }
     };
 
@@ -584,6 +606,7 @@ const updateDisplay = (that, objCreds) => {
         expires_at: objCreds.getStrExpiry(),
         scope: objCreds.scope || '',
         access_token: objCreds.getAccessToken(),
+        auth_error: '',
     });
 
     that.form.btn_main.model.set_state({ description: 'Refresh' });
@@ -637,6 +660,7 @@ const clear = (that) => {
         time_to_exp: '',
         expires_at: '',
         scope: '',
+        auth_error: '',
     });
     that.form.btn_main.model.set_state({ description: 'Sign In' });
     that.form.logged_as.model.set({ value: '' });

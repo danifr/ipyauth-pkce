@@ -25,7 +25,7 @@ def _detect_image_format(data):
 
 # Version of the JavaScript widget module (ipyauth_pkce/js/package.json), not of
 # the Python package. Bump both together only when the model/view contract changes.
-_FRONTEND_VERSION = '1.0.0'
+_FRONTEND_VERSION = '1.1.0'
 _semver_range_frontend_ = f'~{_FRONTEND_VERSION}'
 
 
@@ -49,6 +49,11 @@ class Auth(wg.VBox):
     logged_as = Unicode('').tag(sync=True)
     time_to_exp = Unicode('').tag(sync=True)
     expires_at = Unicode('').tag(sync=True)
+
+    # Set by the frontend to a short category ('cancelled' or 'error') when a
+    # sign-in attempt ends without a token, so a blocking caller can stop
+    # waiting instead of hanging until a timeout. Reset to '' on a new attempt.
+    auth_error = Unicode('').tag(sync=True)
 
     _incr_signout = Int(0).tag(sync=True)
 

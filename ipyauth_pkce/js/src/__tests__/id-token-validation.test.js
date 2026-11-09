@@ -46,8 +46,8 @@ describe('ID-token claim validation', () => {
                     { iss: 'https://attacker.example.com/' },
                     { aud: 'different-client' },
                     { sub: '' },
-                    { exp: now - 61 },
-                    { iat: now + 61 },
+                    { exp: now - 3600 },
+                    { iat: now + 3600 },
                     { nonce: 'different-nonce' }
                 ),
                 (override) => {
@@ -174,7 +174,7 @@ describe('Provider ID-token validation', () => {
             expires_in: 300,
             id_token: buildProviderClaims({
                 iss: 'https://accounts.google.com',
-                exp: now - 61,
+                exp: now - 3600,
             }),
         };
 

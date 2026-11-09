@@ -27,6 +27,8 @@ class AuthModel extends widgets.VBoxModel {
             time_to_exp: '',
             expires_at: '',
 
+            auth_error: '',
+
             _incr_signout: 0,
         };
     }

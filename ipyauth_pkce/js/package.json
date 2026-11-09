@@ -1,6 +1,6 @@
 {
     "name": "ipyauth-pkce",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Jupyter widget for OAuth2 authentication with PKCE",
     "author": "danifr",
     "license": "MIT",
