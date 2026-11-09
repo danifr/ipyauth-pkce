@@ -586,7 +586,7 @@ const updateDisplay = (that, objCreds) => {
         access_token: objCreds.getAccessToken(),
     });
 
-    that.form.btn_main.model.set_state({ description: 'Clear' });
+    that.form.btn_main.model.set_state({ description: 'Refresh' });
     that.form.logged_as.model.set({
         value: util.toHtml('Logged as: ' + objCreds.username, 'name'),
     });
@@ -657,4 +657,4 @@ export default {
     isLogged,
 };
 
-export { buildReadMessage, startCountdown, getBaseUrl };
+export { buildReadMessage, startCountdown, updateDisplay, getBaseUrl };
