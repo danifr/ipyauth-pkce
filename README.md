@@ -94,6 +94,15 @@ params = ParamsGoogle(
 session = Auth(params=params)
 ```
 
+### Custom logo
+
+Replace the provider logo shown in the widget with the `logo` argument: a path
+to an image file (PNG, JPEG, GIF, WebP or SVG) or the raw image bytes.
+
+```python
+session = Auth(params=params, logo='my-logo.svg')
+```
+
 ## How It Works
 
 1. The widget opens a popup window pointing to the OAuth provider's authorization endpoint
