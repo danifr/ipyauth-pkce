@@ -6,7 +6,7 @@ function makeField() {
 
 function makeThat() {
     return {
-        model: { set: jest.fn(), save_changes: jest.fn() },
+        model: { set: jest.fn(), save_changes: jest.fn(), send: jest.fn() },
         form: {
             btn_main: makeField(),
             logged_as: makeField(),
@@ -22,6 +22,7 @@ function makeObjCreds() {
         scope: 'openid profile',
         getStrExpiry: () => 'Sat Nov 07 2026 16:00:00',
         getAccessToken: () => 'tok-123',
+        refresh_token: 'refresh-456',
         getSecondsToExp: () => -1,
     };
 }
@@ -35,7 +36,33 @@ describe('logged-in button relabels to Refresh', () => {
             description: 'Refresh',
         });
         expect(that.model.set).toHaveBeenCalledWith(
-            expect.objectContaining({ access_token: 'tok-123', logged_as: 'user@example.com' })
+            expect.objectContaining({ logged_as: 'user@example.com' })
+        );
+    });
+
+    it('sends tokens as a custom message and keeps them out of the model state', () => {
+        const that = makeThat();
+        updateDisplay(that, makeObjCreds());
+
+        expect(that.model.send).toHaveBeenCalledWith({
+            event: 'tokens',
+            access_token: 'tok-123',
+            refresh_token: 'refresh-456',
+        });
+        for (const [attrs] of that.model.set.mock.calls) {
+            expect(attrs).not.toHaveProperty('access_token');
+            expect(attrs).not.toHaveProperty('refresh_token');
+        }
+    });
+
+    it('sends an empty refresh token when the provider returned none', () => {
+        const that = makeThat();
+        const objCreds = makeObjCreds();
+        delete objCreds.refresh_token;
+        updateDisplay(that, objCreds);
+
+        expect(that.model.send).toHaveBeenCalledWith(
+            expect.objectContaining({ access_token: 'tok-123', refresh_token: '' })
         );
     });
 });

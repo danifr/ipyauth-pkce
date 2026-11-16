@@ -600,12 +600,19 @@ const attemptAutoLogin = async (that) => {
     return startAuthFlow(that, false);
 };
 
+// Tokens travel to the kernel as custom comm messages rather than synced
+// traits, so they never become part of the widget state that can be saved
+// into the notebook file.
+const sendTokens = (that, accessToken, refreshToken) => {
+    that.model.send({ event: 'tokens', access_token: accessToken, refresh_token: refreshToken });
+};
+
 const updateDisplay = (that, objCreds) => {
+    sendTokens(that, objCreds.getAccessToken(), objCreds.refresh_token || '');
     that.model.set({
         logged_as: objCreds.username,
         expires_at: objCreds.getStrExpiry(),
         scope: objCreds.scope || '',
-        access_token: objCreds.getAccessToken(),
         auth_error: '',
     });
 
@@ -654,8 +661,9 @@ const startCountdown = (that, objCreds) => {
 const clear = (that) => {
     clearInterval(that.timer);
 
+    that.creds = null;
+    sendTokens(that, '', '');
     that.model.set({
-        access_token: '',
         logged_as: '',
         time_to_exp: '',
         expires_at: '',

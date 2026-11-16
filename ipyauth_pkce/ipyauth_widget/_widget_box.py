@@ -25,7 +25,7 @@ def _detect_image_format(data):
 
 # Version of the JavaScript widget module (ipyauth_pkce/js/package.json), not of
 # the Python package. Bump both together only when the model/view contract changes.
-_FRONTEND_VERSION = '1.1.0'
+_FRONTEND_VERSION = '1.2.0'
 _semver_range_frontend_ = f'~{_FRONTEND_VERSION}'
 
 
@@ -44,7 +44,11 @@ class Auth(wg.VBox):
 
     params = Dict({}).tag(sync=True)
 
-    access_token = Unicode('').tag(sync=True)
+    # Not synced: the frontend delivers tokens as custom comm messages so they
+    # never become part of the widget state saved into the notebook file.
+    access_token = Unicode('')
+    refresh_token = Unicode('')
+
     scope = Unicode('').tag(sync=True)
     logged_as = Unicode('').tag(sync=True)
     time_to_exp = Unicode('').tag(sync=True)
@@ -90,6 +94,16 @@ class Auth(wg.VBox):
                      )
 
         super().__init__([b1])
+        self.on_msg(self._handle_frontend_msg)
+
+    def _handle_frontend_msg(self, _widget, content, _buffers):
+        if not isinstance(content, dict) or content.get('event') != 'tokens':
+            return
+        access_token = content.get('access_token', '')
+        refresh_token = content.get('refresh_token', '')
+        if isinstance(access_token, str) and isinstance(refresh_token, str):
+            self.access_token = access_token
+            self.refresh_token = refresh_token
 
     def build_widget_logo(self, logo=None):
         """Build the logo image widget.
@@ -184,6 +198,8 @@ class Auth(wg.VBox):
     def clear(self):
         """
         """
+        self.access_token = ''
+        self.refresh_token = ''
         self._incr_signout += 1
 
     @property

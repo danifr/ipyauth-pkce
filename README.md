@@ -59,6 +59,7 @@ After authenticating:
 
 ```python
 session.access_token       # the JWT access token
+session.refresh_token      # the refresh token, if the provider returned one ('' otherwise)
 session.headers            # {'Authorization': 'Bearer eyJ...'}
 session.is_authenticated   # True / False
 session.logged_as          # user email or name
@@ -110,14 +111,15 @@ session = Auth(params=params, logo='my-logo.svg')
 3. The provider redirects back to `/callback/` with an authorization code
 4. The callback page sends the code back to the widget via `postMessage`
 5. The widget asks the Jupyter server to exchange the code for tokens (PKCE: a public client, no client secret)
-6. The widget validates the ID token, and the access token becomes available in the Python kernel
+6. The widget validates the ID token, and the access and refresh tokens become available in the Python kernel
 
-When the token expires the widget clears it; sign in again to get a new one (refresh tokens are not used).
+When the token expires the widget clears it; sign in again to get a new one. The widget does not use the refresh token itself; it only hands it to the kernel (`session.refresh_token`) so Python code can refresh against the provider.
 
 ## Security
 
 - Authorization Code flow with PKCE (no implicit flow, no client secrets in the browser)
 - Server-side token exchange via Jupyter server extension
+- Tokens reach the kernel as custom comm messages, not synced widget traits, so they are never part of the widget state saved into the notebook file
 - XSRF protection on the token exchange endpoint
 - Origin validation on postMessage callbacks
 - Content-Security-Policy headers on the callback page

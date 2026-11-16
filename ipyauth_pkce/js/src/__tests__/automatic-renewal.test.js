@@ -14,6 +14,7 @@ function makeThat() {
         model: {
             set: jest.fn(),
             save_changes: jest.fn(),
+            send: jest.fn(),
         },
         form: {
             btn_main: makeField(),
@@ -35,6 +36,7 @@ describe('Expiry renewal behavior', () => {
 
     it('clears expired credentials without opening an automatic login popup', () => {
         const that = makeThat();
+        that.creds = { access_token: 'old-access', refresh_token: 'old-refresh' };
         const open = jest.spyOn(window, 'open').mockImplementation(() => null);
         const objCreds = { getSecondsToExp: () => 1 };
 
@@ -48,11 +50,16 @@ describe('Expiry renewal behavior', () => {
             });
             expect(that.model.set).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    access_token: '',
                     logged_as: '',
                     expires_at: '',
                 })
             );
+            expect(that.model.send).toHaveBeenCalledWith({
+                event: 'tokens',
+                access_token: '',
+                refresh_token: '',
+            });
+            expect(that.creds).toBeNull();
             expect(jest.getTimerCount()).toBe(0);
         } finally {
             open.mockRestore();
