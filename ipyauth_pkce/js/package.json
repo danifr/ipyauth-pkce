@@ -46,8 +46,8 @@
         "lint": "eslint '**/*.js' --quiet",
         "format": "prettier --write '**/*.js'",
         "build": "npm run build:labextension",
-        "build:labextension": "jupyter-builder build .",
-        "build:labextension:dev": "jupyter-builder build --development True ."
+        "build:labextension": "jupyter-builder build --core-version 4.1.8 .",
+        "build:labextension:dev": "jupyter-builder build --core-version 4.1.8 --development True ."
     },
     "devDependencies": {
         "@babel/core": "^7.24.0",
