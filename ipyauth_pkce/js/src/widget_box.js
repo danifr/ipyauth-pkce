@@ -21,7 +21,6 @@ class AuthModel extends widgets.VBoxModel {
 
             params: {},
 
-            access_token: '',
             scope: '',
             logged_as: '',
             time_to_exp: '',

@@ -100,3 +100,50 @@ def test_clear_signals_frontend():
     before = auth._incr_signout
     auth.clear()
     assert auth._incr_signout == before + 1
+
+
+def _frontend_msg(auth, content):
+    auth._handle_msg({'content': {'data': {'method': 'custom', 'content': content}}, 'buffers': []})
+
+
+def test_tokens_arrive_via_custom_message():
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
+    assert auth.access_token == 'at'
+    assert auth.refresh_token == 'rt'
+    assert auth.is_authenticated
+
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': '', 'refresh_token': ''})
+    assert auth.access_token == ''
+    assert auth.refresh_token == ''
+    assert not auth.is_authenticated
+
+
+@pytest.mark.parametrize('content', [
+    {'event': 'other', 'access_token': 'at'},
+    {'event': 'tokens', 'access_token': 1, 'refresh_token': 'rt'},
+    {'event': 'tokens', 'access_token': 'at', 'refresh_token': None},
+    'tokens',
+])
+def test_unexpected_custom_messages_are_ignored(content):
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
+    _frontend_msg(auth, content)
+    assert auth.access_token == 'at'
+    assert auth.refresh_token == 'rt'
+
+
+def test_clear_drops_tokens():
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
+    auth.clear()
+    assert auth.access_token == ''
+    assert auth.refresh_token == ''
+
+
+def test_tokens_are_not_in_widget_state():
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
+    state = auth.get_state()
+    assert 'access_token' not in state
+    assert 'refresh_token' not in state
