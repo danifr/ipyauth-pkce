@@ -64,6 +64,7 @@ session.headers            # {'Authorization': 'Bearer eyJ...'}
 session.is_authenticated   # True / False
 session.logged_as          # user email or name
 session.expires_at         # expiry timestamp
+session.auth_state         # 'idle', 'in_progress' (popup open), 'signed_in', 'cancelled' or 'error'
 
 # Use with requests
 import requests
