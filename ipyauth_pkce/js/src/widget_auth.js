@@ -124,7 +124,25 @@ const setAuthError = (that, category) => {
     if (!that || !that.model || typeof that.model.set !== 'function') {
         return;
     }
-    that.model.set({ auth_error: category });
+    const update = { auth_error: category };
+    if (category) {
+        update.auth_state = category;
+    }
+    that.model.set(update);
+    that.model.save_changes();
+};
+
+/**
+ * Publish where the sign-in stands via the synced `auth_state` trait:
+ * 'idle' (nothing running, not signed in), 'in_progress' (the sign-in popup
+ * is open), 'signed_in', 'cancelled' or 'error'. A blocking caller can use it
+ * to wait only while a sign-in is actually happening.
+ */
+const setAuthState = (that, state) => {
+    if (!that || !that.model || typeof that.model.set !== 'function') {
+        return;
+    }
+    that.model.set({ auth_state: state });
     that.model.save_changes();
 };
 
@@ -222,12 +240,15 @@ async function startAuthFlow(that, isUserInitiated = true) {
         if (isUserInitiated) {
             showError(that, 'Popup blocked. Please allow popups for this site and try again.');
             setAuthError(that, 'error');
+        } else if (!util.isLogged(that)) {
+            setAuthState(that, 'idle');
         }
         // Signal to callers (e.g. the auto-login attempt on render) that the
         // popup did not open so they can fall back to the manual button.
         return false;
     }
     ipyauthStatus.popupWindowRef = ref;
+    setAuthState(that, 'in_progress');
 
     try {
         // Complete the PKCE pair after the popup has been opened.
@@ -614,6 +635,7 @@ const updateDisplay = (that, objCreds) => {
         expires_at: objCreds.getStrExpiry(),
         scope: objCreds.scope || '',
         auth_error: '',
+        auth_state: 'signed_in',
     });
 
     that.form.btn_main.model.set_state({ description: 'Refresh' });
@@ -669,6 +691,7 @@ const clear = (that) => {
         expires_at: '',
         scope: '',
         auth_error: '',
+        auth_state: 'idle',
     });
     that.form.btn_main.model.set_state({ description: 'Sign In' });
     that.form.logged_as.model.set({ value: '' });

@@ -147,3 +147,7 @@ def test_tokens_are_not_in_widget_state():
     state = auth.get_state()
     assert 'access_token' not in state
     assert 'refresh_token' not in state
+
+
+def test_auth_state_starts_idle():
+    assert Auth(params=PARAMS['keycloak']()).auth_state == 'idle'
