@@ -30,7 +30,11 @@ jobs:
         working-directory: ipyauth_pkce/js
       - run: npm test
         working-directory: ipyauth_pkce/js
-      # The editable install also builds the JupyterLab extension (build hook).
+      # Build the labextension explicitly so a failure is fatal here: the
+      # editable install below only warns (optional-editable-build) and then
+      # reuses this bundle (skip-if-exists). Keep the pin in sync with pyproject.toml.
+      - run: pip install jupyter-builder==1.2.3 && npm run build
+        working-directory: ipyauth_pkce/js
       - run: pip install -e . pytest "jupyterlab>=4,<5"
       - run: pytest -q
       - name: Wheel and sdist build
