@@ -28,6 +28,7 @@ class AuthModel extends widgets.VBoxModel {
 
             auth_error: '',
             auth_state: 'idle',
+            keep_refresh_token: false,
 
             _incr_signout: 0,
         };

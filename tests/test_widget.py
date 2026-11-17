@@ -107,7 +107,7 @@ def _frontend_msg(auth, content):
 
 
 def test_tokens_arrive_via_custom_message():
-    auth = Auth(params=PARAMS['keycloak']())
+    auth = Auth(params=PARAMS['keycloak'](), keep_refresh_token=True)
     _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
     assert auth.access_token == 'at'
     assert auth.refresh_token == 'rt'
@@ -126,7 +126,7 @@ def test_tokens_arrive_via_custom_message():
     'tokens',
 ])
 def test_unexpected_custom_messages_are_ignored(content):
-    auth = Auth(params=PARAMS['keycloak']())
+    auth = Auth(params=PARAMS['keycloak'](), keep_refresh_token=True)
     _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
     _frontend_msg(auth, content)
     assert auth.access_token == 'at'
@@ -134,7 +134,7 @@ def test_unexpected_custom_messages_are_ignored(content):
 
 
 def test_clear_drops_tokens():
-    auth = Auth(params=PARAMS['keycloak']())
+    auth = Auth(params=PARAMS['keycloak'](), keep_refresh_token=True)
     _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
     auth.clear()
     assert auth.access_token == ''
@@ -151,3 +151,15 @@ def test_tokens_are_not_in_widget_state():
 
 def test_auth_state_starts_idle():
     assert Auth(params=PARAMS['keycloak']()).auth_state == 'idle'
+
+
+def test_refresh_token_is_opt_in():
+    auth = Auth(params=PARAMS['keycloak']())
+    assert auth.keep_refresh_token is False
+    assert 'keep_refresh_token' in auth.get_state()
+    # Even if a frontend sent one, it is not kept unless asked for.
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': 'rt'})
+    assert auth.access_token == 'at'
+    assert auth.refresh_token == ''
+
+    assert Auth(params=PARAMS['keycloak'](), keep_refresh_token=True).keep_refresh_token is True

@@ -213,7 +213,12 @@ def _validate_token_exchange_body(body):
     if not _CODE_VERIFIER_RE.match(code_verifier):
         return None, (400, _make_error('code_verifier does not match RFC 7636 format'))
 
+    keep_refresh_token = body.get('keep_refresh_token', False)
+    if not isinstance(keep_refresh_token, bool):
+        return None, (400, _make_error('Invalid value for field: keep_refresh_token'))
+
     fields = {f: body[f] for f in required_fields}
+    fields['keep_refresh_token'] = keep_refresh_token
     # Pin the server-resolved endpoint so the exchange always targets a trusted
     # URL, never the raw browser-supplied value.
     fields['token_endpoint'] = resolved_endpoint
@@ -221,6 +226,22 @@ def _validate_token_exchange_body(body):
 
 
 _BAD_GATEWAY = json.dumps({'error': 'bad_gateway', 'error_description': 'Token exchange failed'})
+
+# Response fields that are only passed on when the widget asked for them.
+_REFRESH_TOKEN_FIELDS = ('refresh_token', 'refresh_expires_in')
+
+
+def _without_refresh_token(body):
+    """Return the token response without its refresh token, or None if it is not a JSON object."""
+    try:
+        data = json.loads(body)
+    except (ValueError, TypeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    for field in _REFRESH_TOKEN_FIELDS:
+        data.pop(field, None)
+    return json.dumps(data)
 
 
 class TokenExchangeHandler(JupyterHandler):
@@ -260,7 +281,15 @@ class TokenExchangeHandler(JupyterHandler):
                 body=urllib.parse.urlencode(payload),
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
             )
-            self._write_json(200, response.body)
+            body = response.body
+            if not fields['keep_refresh_token']:
+                # The refresh token stays on the server unless the widget opted in.
+                body = _without_refresh_token(body)
+                if body is None:
+                    self.log.error('Token exchange returned a response that is not a JSON object')
+                    self._write_json(502, _BAD_GATEWAY)
+                    return
+            self._write_json(200, body)
         except tornado.httpclient.HTTPClientError as e:
             if e.response and e.response.body:
                 # IdP returned an error response — forward it as 400

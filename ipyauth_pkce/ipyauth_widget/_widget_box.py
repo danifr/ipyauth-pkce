@@ -1,7 +1,7 @@
 
 import ipywidgets as wg
 
-from traitlets import Unicode, Dict, Int
+from traitlets import Bool, Unicode, Dict, Int
 
 from ._config import DIC_LOGO
 from ._params_base import ParamsBase
@@ -48,6 +48,8 @@ class Auth(wg.VBox):
     # never become part of the widget state saved into the notebook file.
     access_token = Unicode('')
     refresh_token = Unicode('')
+    # Opt-in: the refresh token leaves the Jupyter server only when this is True.
+    keep_refresh_token = Bool(False).tag(sync=True)
 
     scope = Unicode('').tag(sync=True)
     logged_as = Unicode('').tag(sync=True)
@@ -69,7 +71,8 @@ class Auth(wg.VBox):
 
     def __init__(self,
                  params=None,
-                 logo=None):
+                 logo=None,
+                 keep_refresh_token=False):
         """
         params : ParamsAuth0 | ParamsGoogle | ParamsKeycloak
             Provider configuration.
@@ -77,10 +80,15 @@ class Auth(wg.VBox):
             Override the provider logo shown in the widget. Pass a path to an
             image file (PNG, JPEG, GIF, WebP or SVG) or the raw image bytes.
             When omitted, the built-in logo for the provider is used.
+        keep_refresh_token : bool, optional
+            Make the provider's refresh token available as ``refresh_token``.
+            Off by default: the Jupyter server then strips it from the token
+            response, so it never reaches the browser or the kernel.
         """
         if not isinstance(params, ParamsBase):
             raise TypeError('params must be a ParamsAuth0, ParamsGoogle or ParamsKeycloak object')
 
+        self.keep_refresh_token = bool(keep_refresh_token)
         self.params = params.data
         self.name = self.params['name']
 
@@ -109,7 +117,7 @@ class Auth(wg.VBox):
         refresh_token = content.get('refresh_token', '')
         if isinstance(access_token, str) and isinstance(refresh_token, str):
             self.access_token = access_token
-            self.refresh_token = refresh_token
+            self.refresh_token = refresh_token if self.keep_refresh_token else ''
 
     def build_widget_logo(self, logo=None):
         """Build the logo image widget.
