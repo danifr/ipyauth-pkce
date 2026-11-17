@@ -36,8 +36,15 @@ class _FakeIdP(http.server.BaseHTTPRequestHandler):
         code = form['code'][0]
         if code == 'drop':
             return  # close without a response -> network error
-        status, body = (200, {'access_token': 'at', 'id_token': 'x.y.z'}) if code == 'good' else (
-            400, {'error': 'invalid_grant'})
+        if code == 'good':
+            status, body = 200, {'access_token': 'at', 'id_token': 'x.y.z'}
+        elif code == 'with-refresh':
+            status, body = 200, {'access_token': 'at', 'id_token': 'x.y.z',
+                                 'refresh_token': 'rt', 'refresh_expires_in': 1800}
+        elif code == 'not-an-object':
+            status, body = 200, ['access_token', 'rt']
+        else:
+            status, body = 400, {'error': 'invalid_grant'}
         payload = json.dumps(body).encode()
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
@@ -173,6 +180,33 @@ def test_token_exchange_success_posts_to_configured_endpoint(server):
         'grant_type': 'authorization_code', 'code': 'good', 'code_verifier': 'v' * 43,
         'client_id': 'cid', 'redirect_uri': 'http://localhost:8888/callback/',
     }]
+
+
+def test_token_exchange_strips_refresh_token_by_default(server):
+    status, body = _post_exchange(server, _exchange_body('with-refresh'))
+    assert status == 200
+    assert json.loads(body) == {'access_token': 'at', 'id_token': 'x.y.z'}
+
+
+def test_token_exchange_keeps_refresh_token_when_asked(server):
+    status, body = _post_exchange(server, {**_exchange_body('with-refresh'), 'keep_refresh_token': True})
+    assert status == 200
+    assert json.loads(body) == {
+        'access_token': 'at', 'id_token': 'x.y.z', 'refresh_token': 'rt', 'refresh_expires_in': 1800,
+    }
+
+
+def test_token_exchange_rejects_unexpected_response_when_stripping(server):
+    status, body = _post_exchange(server, _exchange_body('not-an-object'))
+    assert status == 502
+    assert json.loads(body) == {'error': 'bad_gateway', 'error_description': 'Token exchange failed'}
+
+
+@pytest.mark.parametrize('value', ['true', 1, None])
+def test_token_exchange_rejects_non_bool_keep_refresh_token(server, value):
+    status, body = _post_exchange(server, {**_exchange_body('with-refresh'), 'keep_refresh_token': value})
+    assert status == 400
+    assert json.loads(body)['error_description'] == 'Invalid value for field: keep_refresh_token'
 
 
 def test_token_exchange_forwards_idp_error_as_400(server):

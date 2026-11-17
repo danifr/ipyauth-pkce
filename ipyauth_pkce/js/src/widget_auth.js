@@ -343,10 +343,11 @@ function getBaseUrl() {
 
 /**
  * Exchange an authorization code for tokens via the server-side token exchange endpoint.
- * Posts {code, code_verifier, redirect_uri, token_endpoint, client_id} to
- * /callback/token-exchange and returns the parsed token response.
+ * Posts {code, code_verifier, redirect_uri, token_endpoint, client_id,
+ * keep_refresh_token} to /callback/token-exchange and returns the parsed token
+ * response. The server leaves out the refresh token unless keep_refresh_token.
  */
-async function exchangeCodeForTokens(params, data, codeVerifier) {
+async function exchangeCodeForTokens(params, data, codeVerifier, keepRefreshToken = false) {
     const { url_params } = params;
     const body = {
         code: data.code,
@@ -354,6 +355,7 @@ async function exchangeCodeForTokens(params, data, codeVerifier) {
         redirect_uri: url_params.redirect_uri,
         token_endpoint: params.token_endpoint || '',
         client_id: url_params.client_id,
+        keep_refresh_token: keepRefreshToken,
     };
 
     const baseUrl = getBaseUrl().replace(/\/+$/, '');
@@ -479,10 +481,17 @@ const buildReadMessage = (that, codeVerifier) => {
 
         if (data.statusAuth === 'ok') {
             // Authorization Code flow: exchange code for tokens server-side
-            exchangeCodeForTokens(params, data, codeVerifier)
+            const keepRefreshToken = Boolean(
+                that.model && that.model.get && that.model.get('keep_refresh_token')
+            );
+            exchangeCodeForTokens(params, data, codeVerifier, keepRefreshToken)
                 .then((tokenData) => {
                     // Merge token response with original callback data (preserves state, etc.)
                     const mergedData = Object.assign({}, data, tokenData);
+                    if (!keepRefreshToken) {
+                        delete mergedData.refresh_token;
+                        delete mergedData.refresh_expires_in;
+                    }
                     // Parse id_token JWT if present
                     if (mergedData.id_token && typeof mergedData.id_token === 'string') {
                         const rawIdToken = mergedData.id_token;
