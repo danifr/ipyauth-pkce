@@ -114,6 +114,21 @@ const clearError = (that) => {
 };
 
 /**
+ * Set auth traits and also send them as a custom message. Synced updates are
+ * throttled by ipywidgets until the kernel reports idle, which a kernel
+ * blocked in a cell (e.g. jupyter-ui-poll) never does, so a second update such
+ * as 'cancelled' would reach Python only after the cell ends. Custom messages
+ * are not throttled.
+ */
+const publishAuthUpdate = (that, update) => {
+    that.model.set(update);
+    that.model.save_changes();
+    if (typeof that.model.send === 'function') {
+        that.model.send({ event: 'auth_state', ...update });
+    }
+};
+
+/**
  * Publish a terminal auth outcome to the Python side via the synced
  * `auth_error` trait ('cancelled' | 'error'), so a blocking caller can stop
  * waiting without hanging until a timeout. Reset to '' at the start of a new
@@ -128,8 +143,7 @@ const setAuthError = (that, category) => {
     if (category) {
         update.auth_state = category;
     }
-    that.model.set(update);
-    that.model.save_changes();
+    publishAuthUpdate(that, update);
 };
 
 /**
@@ -142,8 +156,7 @@ const setAuthState = (that, state) => {
     if (!that || !that.model || typeof that.model.set !== 'function') {
         return;
     }
-    that.model.set({ auth_state: state });
-    that.model.save_changes();
+    publishAuthUpdate(that, { auth_state: state });
 };
 
 /**
