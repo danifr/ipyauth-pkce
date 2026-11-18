@@ -163,3 +163,24 @@ def test_refresh_token_is_opt_in():
     assert auth.refresh_token == ''
 
     assert Auth(params=PARAMS['keycloak'](), keep_refresh_token=True).keep_refresh_token is True
+
+
+def test_auth_state_arrives_via_custom_message():
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'auth_state', 'auth_state': 'in_progress', 'auth_error': ''})
+    assert auth.auth_state == 'in_progress'
+    _frontend_msg(auth, {'event': 'auth_state', 'auth_state': 'cancelled', 'auth_error': 'cancelled'})
+    assert auth.auth_state == 'cancelled'
+    assert auth.auth_error == 'cancelled'
+
+
+@pytest.mark.parametrize('content', [
+    {'event': 'auth_state', 'auth_state': 'bogus'},
+    {'event': 'auth_state', 'auth_state': 1, 'auth_error': ['x']},
+    {'event': 'auth_state', 'auth_error': 'bogus'},
+])
+def test_invalid_auth_state_messages_are_ignored(content):
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, content)
+    assert auth.auth_state == 'idle'
+    assert auth.auth_error == ''

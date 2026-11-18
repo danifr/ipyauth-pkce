@@ -91,6 +91,27 @@ describe('auth_state signal', () => {
         }
     });
 
+    it('also sends auth state changes as custom messages, which are not throttled', async () => {
+        const popup = makePopup();
+        const open = jest.spyOn(window, 'open').mockImplementation(() => popup);
+        const that = makeThat();
+        try {
+            await auth.login(that);
+            expect(that.model.send).toHaveBeenCalledWith(
+                expect.objectContaining({ event: 'auth_state', auth_state: 'in_progress' })
+            );
+            popup.closed = true;
+            jest.advanceTimersByTime(1200);
+            expect(that.model.send).toHaveBeenCalledWith({
+                event: 'auth_state',
+                auth_error: 'cancelled',
+                auth_state: 'cancelled',
+            });
+        } finally {
+            open.mockRestore();
+        }
+    });
+
     it("stays 'idle' when the automatic attempt on render is blocked", async () => {
         const open = jest.spyOn(window, 'open').mockImplementation(() => null);
         const that = makeThat();

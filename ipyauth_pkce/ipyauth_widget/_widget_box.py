@@ -29,6 +29,10 @@ _FRONTEND_VERSION = '1.3.0'
 _semver_range_frontend_ = f'~{_FRONTEND_VERSION}'
 
 
+_AUTH_STATES = frozenset({'idle', 'in_progress', 'signed_in', 'cancelled', 'error'})
+_AUTH_ERRORS = frozenset({'', 'cancelled', 'error'})
+
+
 class Auth(wg.VBox):
     """
     Auth widget made of ipywidgets
@@ -111,13 +115,28 @@ class Auth(wg.VBox):
         self.on_msg(self._handle_frontend_msg)
 
     def _handle_frontend_msg(self, _widget, content, _buffers):
-        if not isinstance(content, dict) or content.get('event') != 'tokens':
+        if not isinstance(content, dict):
+            return
+        if content.get('event') == 'auth_state':
+            self._apply_auth_state(content)
+            return
+        if content.get('event') != 'tokens':
             return
         access_token = content.get('access_token', '')
         refresh_token = content.get('refresh_token', '')
         if isinstance(access_token, str) and isinstance(refresh_token, str):
             self.access_token = access_token
             self.refresh_token = refresh_token if self.keep_refresh_token else ''
+
+    def _apply_auth_state(self, content):
+        # Also delivered as a custom message because synced trait updates can be
+        # held back in the browser while the kernel is blocked in a cell.
+        auth_state = content.get('auth_state')
+        if auth_state in _AUTH_STATES:
+            self.auth_state = auth_state
+        auth_error = content.get('auth_error')
+        if auth_error in _AUTH_ERRORS:
+            self.auth_error = auth_error
 
     def build_widget_logo(self, logo=None):
         """Build the logo image widget.
