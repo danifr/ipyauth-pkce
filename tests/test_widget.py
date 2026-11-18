@@ -184,3 +184,10 @@ def test_invalid_auth_state_messages_are_ignored(content):
     _frontend_msg(auth, content)
     assert auth.auth_state == 'idle'
     assert auth.auth_error == ''
+
+
+def test_disable_disables_the_main_button():
+    auth = Auth(params=PARAMS['keycloak']())
+    assert not auth._btn_main.disabled
+    auth.disable()
+    assert auth._btn_main.disabled

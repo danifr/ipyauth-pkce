@@ -98,6 +98,7 @@ class Auth(wg.VBox):
 
         wg_logo = self.build_widget_logo(logo)
         wg_button_main = self.build_widget_button_main()
+        self._btn_main = wg_button_main
         wg_logged_as = self.build_widget_logged_as()
         wg_time_to_exp = self.build_widget_time_to_exp()
         wg_expire_at = self.build_widget_expire_at()
@@ -127,6 +128,10 @@ class Auth(wg.VBox):
         if isinstance(access_token, str) and isinstance(refresh_token, str):
             self.access_token = access_token
             self.refresh_token = refresh_token if self.keep_refresh_token else ''
+
+    def disable(self):
+        """Disable the main button, e.g. once nothing is waiting for a sign-in any more."""
+        self._btn_main.disabled = True
 
     def _apply_auth_state(self, content):
         # Also delivered as a custom message because synced trait updates can be
