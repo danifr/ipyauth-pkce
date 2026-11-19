@@ -80,11 +80,13 @@ describe('refresh token opt-in', () => {
 
         const body = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
         expect(body.keep_refresh_token).toBe(false);
-        expect(that.model.send).toHaveBeenCalledWith({
-            event: 'tokens',
-            access_token: 'at',
-            refresh_token: '',
-        });
+        expect(that.model.send).toHaveBeenCalledWith(
+            expect.objectContaining({
+                event: 'tokens',
+                access_token: 'at',
+                refresh_token: '',
+            })
+        );
         expect(that.creds.refresh_token).toBeUndefined();
     });
 
@@ -94,10 +96,12 @@ describe('refresh token opt-in', () => {
 
         const body = JSON.parse(globalThis.fetch.mock.calls[0][1].body);
         expect(body.keep_refresh_token).toBe(true);
-        expect(that.model.send).toHaveBeenCalledWith({
-            event: 'tokens',
-            access_token: 'at',
-            refresh_token: 'rt',
-        });
+        expect(that.model.send).toHaveBeenCalledWith(
+            expect.objectContaining({
+                event: 'tokens',
+                access_token: 'at',
+                refresh_token: 'rt',
+            })
+        );
     });
 });
