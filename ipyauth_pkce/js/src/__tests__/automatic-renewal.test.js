@@ -58,6 +58,7 @@ describe('Expiry renewal behavior', () => {
                 event: 'tokens',
                 access_token: '',
                 refresh_token: '',
+                expires_at_ms: null,
             });
             expect(that.creds).toBeNull();
             expect(jest.getTimerCount()).toBe(0);

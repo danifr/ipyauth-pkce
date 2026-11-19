@@ -1,3 +1,4 @@
+import time
 
 import ipywidgets as wg
 
@@ -93,6 +94,9 @@ class Auth(wg.VBox):
             raise TypeError('params must be a ParamsAuth0, ParamsGoogle or ParamsKeycloak object')
 
         self.keep_refresh_token = bool(keep_refresh_token)
+        # Epoch seconds sent by the frontend, so the kernel can tell when the
+        # token has expired even if the browser never sends the clear message.
+        self._token_expires_at = None
         self.params = params.data
         self.name = self.params['name']
 
@@ -128,6 +132,11 @@ class Auth(wg.VBox):
         if isinstance(access_token, str) and isinstance(refresh_token, str):
             self.access_token = access_token
             self.refresh_token = refresh_token if self.keep_refresh_token else ''
+            expires_at_ms = content.get('expires_at_ms')
+            if isinstance(expires_at_ms, (int, float)) and not isinstance(expires_at_ms, bool):
+                self._token_expires_at = expires_at_ms / 1000
+            else:
+                self._token_expires_at = None
 
     def disable(self):
         """Disable the main button, e.g. once nothing is waiting for a sign-in any more."""
@@ -229,8 +238,9 @@ class Auth(wg.VBox):
         return widget
 
     def show(self):
-        """Print key session attributes."""
-        for attr in ['name', 'logged_as', 'expires_at', 'access_token']:
+        """Print key session attributes. Tokens are left out because cell
+        output is saved into the notebook file."""
+        for attr in ['name', 'logged_as', 'expires_at', 'is_authenticated']:
             print(f'{attr} = {getattr(self, attr)}')
 
     def clear(self):
@@ -238,19 +248,22 @@ class Auth(wg.VBox):
         """
         self.access_token = ''
         self.refresh_token = ''
+        self._token_expires_at = None
         self._incr_signout += 1
 
     @property
     def headers(self):
         """Return Authorization headers ready to use with requests."""
-        if not self.access_token:
+        if not self.is_authenticated:
             return {}
         return {'Authorization': f'Bearer {self.access_token}'}
 
     @property
     def is_authenticated(self):
-        """Check if the user is currently authenticated."""
-        return bool(self.access_token)
+        """Check if there is an access token that has not expired yet."""
+        if not self.access_token:
+            return False
+        return self._token_expires_at is None or time.time() < self._token_expires_at
 
     def __repr__(self):
         if self.access_token:

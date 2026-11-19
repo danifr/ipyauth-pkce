@@ -23,6 +23,7 @@ function makeObjCreds() {
         getStrExpiry: () => 'Sat Nov 07 2026 16:00:00',
         getAccessToken: () => 'tok-123',
         refresh_token: 'refresh-456',
+        expiry: new Date(1800000000000),
         getSecondsToExp: () => -1,
     };
 }
@@ -48,6 +49,7 @@ describe('logged-in button relabels to Refresh', () => {
             event: 'tokens',
             access_token: 'tok-123',
             refresh_token: 'refresh-456',
+            expires_at_ms: 1800000000000,
         });
         for (const [attrs] of that.model.set.mock.calls) {
             expect(attrs).not.toHaveProperty('access_token');
@@ -63,6 +65,17 @@ describe('logged-in button relabels to Refresh', () => {
 
         expect(that.model.send).toHaveBeenCalledWith(
             expect.objectContaining({ access_token: 'tok-123', refresh_token: '' })
+        );
+    });
+
+    it('sends a null expiry when the credentials have none', () => {
+        const that = makeThat();
+        const objCreds = makeObjCreds();
+        delete objCreds.expiry;
+        updateDisplay(that, objCreds);
+
+        expect(that.model.send).toHaveBeenCalledWith(
+            expect.objectContaining({ event: 'tokens', expires_at_ms: null })
         );
     });
 });

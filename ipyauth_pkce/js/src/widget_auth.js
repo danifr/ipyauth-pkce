@@ -645,13 +645,20 @@ const attemptAutoLogin = async (that) => {
 
 // Tokens travel to the kernel as custom comm messages rather than synced
 // traits, so they never become part of the widget state that can be saved
-// into the notebook file.
-const sendTokens = (that, accessToken, refreshToken) => {
-    that.model.send({ event: 'tokens', access_token: accessToken, refresh_token: refreshToken });
+// into the notebook file. The expiry (epoch ms) lets the kernel stop using an
+// expired token even if the clear message from the countdown never arrives.
+const sendTokens = (that, accessToken, refreshToken, expiresAtMs = null) => {
+    that.model.send({
+        event: 'tokens',
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_at_ms: expiresAtMs,
+    });
 };
 
 const updateDisplay = (that, objCreds) => {
-    sendTokens(that, objCreds.getAccessToken(), objCreds.refresh_token || '');
+    const expiresAtMs = objCreds.expiry instanceof Date ? objCreds.expiry.getTime() : null;
+    sendTokens(that, objCreds.getAccessToken(), objCreds.refresh_token || '', expiresAtMs);
     that.model.set({
         logged_as: objCreds.username,
         expires_at: objCreds.getStrExpiry(),

@@ -149,6 +149,47 @@ def test_tokens_are_not_in_widget_state():
     assert 'refresh_token' not in state
 
 
+def test_expired_token_is_not_used(monkeypatch):
+    auth = Auth(params=PARAMS['keycloak']())
+    monkeypatch.setattr('time.time', lambda: 1000.0)
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': '',
+                         'expires_at_ms': 1_060_000})
+    assert auth.is_authenticated
+    assert auth.headers == {'Authorization': 'Bearer at'}
+
+    monkeypatch.setattr('time.time', lambda: 1060.0)
+    assert not auth.is_authenticated
+    assert auth.headers == {}
+
+
+@pytest.mark.parametrize('expires_at_ms', [None, 'soon', True, [1]])
+def test_missing_or_invalid_expiry_falls_back_to_token_presence(expires_at_ms):
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': '',
+                         'expires_at_ms': expires_at_ms})
+    assert auth._token_expires_at is None
+    assert auth.is_authenticated
+
+
+def test_clear_drops_expiry():
+    auth = Auth(params=PARAMS['keycloak']())
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'at', 'refresh_token': '',
+                         'expires_at_ms': 1})
+    auth.clear()
+    assert auth._token_expires_at is None
+
+
+def test_show_does_not_print_tokens(capsys):
+    auth = Auth(params=PARAMS['keycloak'](), keep_refresh_token=True)
+    _frontend_msg(auth, {'event': 'tokens', 'access_token': 'SECRET_AT',
+                         'refresh_token': 'SECRET_RT'})
+    auth.show()
+    out = capsys.readouterr().out
+    assert 'SECRET_AT' not in out
+    assert 'SECRET_RT' not in out
+    assert 'is_authenticated = True' in out
+
+
 def test_auth_state_starts_idle():
     assert Auth(params=PARAMS['keycloak']()).auth_state == 'idle'
 
