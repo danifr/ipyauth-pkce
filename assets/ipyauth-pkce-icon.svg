@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="ipyauth-pkce">
+  <title>ipyauth-pkce</title>
+  <defs>
+    <path id="ring" fill-rule="evenodd" d="M2 64 A36 10 0 1 0 74 64 A36 10 0 1 0 2 64 Z M12.05 64 A25.95 4.97 0 1 1 63.95 64 A25.95 4.97 0 1 1 12.05 64 Z"/>
+    <clipPath id="front"><rect x="0" y="64" width="80" height="20"/></clipPath>
+    <clipPath id="planet"><circle cx="38" cy="64" r="20"/></clipPath>
+  </defs>
+  <g transform="translate(7.5 0)">
+  <path d="M58 64 H104 M88 64 V80 M100 64 V76" fill="none" stroke="#4E4E4E" stroke-width="10" stroke-linecap="round"/>
+  <g transform="rotate(-20 38 64)">
+    <use href="#ring" fill="#C2571A"/>
+  </g>
+  <circle cx="38" cy="64" r="20" fill="#767677"/>
+  <g clip-path="url(#planet)" transform="rotate(-20 38 64)" fill="#9E9E9E">
+    <rect x="10" y="48" width="56" height="4"/>
+    <rect x="10" y="77" width="56" height="4"/>
+  </g>
+  <g transform="rotate(-20 38 64)">
+    <use href="#ring" fill="#F37726" clip-path="url(#front)"/>
+  </g>
+  </g>
+</svg>
