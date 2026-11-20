@@ -1,5 +1,7 @@
 # ipyauth-pkce
 
+<a href="https://github.com/danifr/ipyauth-pkce"><img src="https://raw.githubusercontent.com/danifr/ipyauth-pkce/main/assets/ipyauth-pkce-wordmark.svg" alt="ipyauth-pkce" width="400"></a>
+
 A [Jupyter widget](https://ipywidgets.readthedocs.io/en/stable/) that lets notebook users authenticate via OAuth2 (Authorization Code with PKCE) directly from a notebook cell.
 
 After signing in, the access token is available in the Python kernel for making requests to protected APIs.

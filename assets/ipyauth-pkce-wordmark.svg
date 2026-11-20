@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 379 52" width="379" height="52" role="img" aria-label="ipyauth-pkce">
+  <title>ipyauth-pkce</title>
+  <style>.deco{user-select:none;-webkit-user-select:none}</style>
+  <defs>
+    <path id="ring" fill-rule="evenodd" d="M2 64 A36 10 0 1 0 74 64 A36 10 0 1 0 2 64 Z M12.05 64 A25.95 4.97 0 1 1 63.95 64 A25.95 4.97 0 1 1 12.05 64 Z"/>
+    <clipPath id="front"><rect x="0" y="64" width="80" height="20"/></clipPath>
+    <clipPath id="planet"><circle cx="38" cy="64" r="20"/></clipPath>
+  </defs>
+  <path d="M58 64 H104 M88 64 V80 M100 64 V76" fill="none" stroke="#4E4E4E" stroke-width="10" stroke-linecap="round"/>
+  <g transform="rotate(-20 38 64)">
+    <use href="#ring" fill="#C2571A"/>
+  </g>
+  <circle cx="38" cy="64" r="20" fill="#767677"/>
+  <g clip-path="url(#planet)" transform="rotate(-20 38 64)" fill="#9E9E9E">
+    <rect x="10" y="48" width="56" height="4"/>
+    <rect x="10" y="77" width="56" height="4"/>
+  </g>
+  <g transform="rotate(-20 38 64)">
+    <use href="#ring" fill="#F37726" clip-path="url(#front)"/>
+  </g>
+  <text class="deco" x="124" y="78" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="46" font-weight="600" fill="#4E4E4E" textLength="150" lengthAdjust="spacingAndGlyphs">ipyauth</text>
+  <rect x="276" y="61" width="12" height="6" rx="1" fill="#4E4E4E"/>
+  <rect x="291" y="44" width="84" height="42" rx="21" fill="#F37726"/>
+  <text class="deco" x="333" y="74" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="24" font-weight="700" fill="#FFFFFF" textLength="62" lengthAdjust="spacingAndGlyphs">PKCE</text>
+  <text x="124" y="78" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="46" textLength="251" lengthAdjust="spacingAndGlyphs" fill-opacity="0">ipyauth-pkce</text>
+</svg>
